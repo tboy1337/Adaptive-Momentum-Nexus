@@ -1,7 +1,6 @@
 import numpy as np
 from jesse.strategies import Strategy
 from jesse import utils
-import talib
 from typing import Union
 
 
@@ -59,8 +58,8 @@ class AdaptiveMomentumNexus(Strategy):
         
         # Volume filter - only trade if volume is above average
         current_volume = self.volume
-        volume_ma = talib.SMA(self.volume, self.volume_ma_period)
-        volume_filter = current_volume > volume_ma[-1] * 1.2
+        volume_ma = self.sma(self.volume_ma_period, 'volume')
+        volume_filter = current_volume > volume_ma * 1.2
         
         # EMA crossover (fast crosses above slow)
         ema_crossover = fast_ema > slow_ema and self.cross_above(fast_ema, slow_ema)
@@ -103,8 +102,8 @@ class AdaptiveMomentumNexus(Strategy):
         
         # Volume filter - only trade if volume is above average
         current_volume = self.volume
-        volume_ma = talib.SMA(self.volume, self.volume_ma_period)
-        volume_filter = current_volume > volume_ma[-1] * 1.2
+        volume_ma = self.sma(self.volume_ma_period, 'volume')
+        volume_filter = current_volume > volume_ma * 1.2
         
         # EMA crossover (fast crosses below slow)
         ema_crossover = fast_ema < slow_ema and self.cross_below(fast_ema, slow_ema)
@@ -242,7 +241,9 @@ class AdaptiveMomentumNexus(Strategy):
         macd, macd_signal, macd_hist = self.macd()
         
         # Exit if RSI becomes overbought and MACD histogram starts declining
-        if rsi > self.rsi_overbought and macd_hist < macd_hist[-1] < macd_hist[-2]:
+        macd_hist_prev1 = self.macd_hist_previous(1)
+        macd_hist_prev2 = self.macd_hist_previous(2)
+        if rsi > self.rsi_overbought and macd_hist < macd_hist_prev1 < macd_hist_prev2:
             return True
             
         # Also exit if EMA crosses bearishly
@@ -263,7 +264,9 @@ class AdaptiveMomentumNexus(Strategy):
         macd, macd_signal, macd_hist = self.macd()
         
         # Exit if RSI becomes oversold and MACD histogram starts rising
-        if rsi < self.rsi_oversold and macd_hist > macd_hist[-1] > macd_hist[-2]:
+        macd_hist_prev1 = self.macd_hist_previous(1)
+        macd_hist_prev2 = self.macd_hist_previous(2)
+        if rsi < self.rsi_oversold and macd_hist > macd_hist_prev1 > macd_hist_prev2:
             return True
             
         # Also exit if EMA crosses bullishly
@@ -275,27 +278,64 @@ class AdaptiveMomentumNexus(Strategy):
             
         return False
     
-    def ema(self, period: int) -> np.ndarray:
-        """Calculate EMA for the close price"""
-        return talib.EMA(self.candles[:, 2], period)
+    def ema(self, period: int, source_type: str = "close", sequential: bool = False) -> Union[float, np.ndarray]:
+        """Calculate EMA for the specified price"""
+        from jesse.indicators import ema
+        return ema(self.candles, period, source_type, sequential)
     
-    def rsi(self, period: int) -> float:
-        """Calculate RSI for the close price"""
-        return talib.RSI(self.candles[:, 2], period)[-1]
+    def sma(self, period: int, source_type: str = "close", sequential: bool = False) -> Union[float, np.ndarray]:
+        """Calculate SMA for the specified price"""
+        from jesse.indicators import sma
+        return sma(self.candles, period, source_type, sequential)
     
-    def atr(self, period: int) -> float:
+    def rsi(self, period: int, source_type: str = "close", sequential: bool = False) -> Union[float, np.ndarray]:
+        """Calculate RSI for the specified price"""
+        from jesse.indicators import rsi
+        return rsi(self.candles, period, source_type, sequential)
+    
+    def atr(self, period: int, sequential: bool = False) -> Union[float, np.ndarray]:
         """Calculate ATR"""
-        return talib.ATR(self.candles[:, 3], self.candles[:, 4], self.candles[:, 2], period)[-1]
+        from jesse.indicators import atr
+        return atr(self.candles, period, sequential)
     
-    def macd(self) -> tuple:
+    def macd(self, fast_period: int = None, slow_period: int = None, signal_period: int = None, 
+              source_type: str = "close", sequential: bool = False) -> tuple:
         """Calculate MACD"""
-        macd, signal, hist = talib.MACD(
-            self.candles[:, 2], 
-            fastperiod=self.macd_fast, 
-            slowperiod=self.macd_slow, 
-            signalperiod=self.macd_signal
+        from jesse.indicators import macd
+        
+        # Use instance variables if parameters are not provided
+        if fast_period is None:
+            fast_period = self.macd_fast
+        if slow_period is None:
+            slow_period = self.macd_slow
+        if signal_period is None:
+            signal_period = self.macd_signal
+            
+        macd_val = macd(self.candles, fast_period, slow_period, signal_period, source_type, sequential)
+        
+        if sequential:
+            return macd_val.macd, macd_val.signal, macd_val.hist
+        else:
+            return macd_val.macd, macd_val.signal, macd_val.hist
+    
+    def macd_hist_previous(self, periods_ago: int) -> float:
+        """Get MACD histogram value from previous candles"""
+        from jesse.indicators import macd
+        
+        # When asking for previous values, we need sequential data
+        macd_values = macd(
+            self.candles, 
+            self.macd_fast, 
+            self.macd_slow, 
+            self.macd_signal, 
+            "close", 
+            True
         )
-        return macd[-1], signal[-1], hist[-1]
+        
+        # Return the histogram value from n periods ago
+        if len(macd_values.hist) > periods_ago:
+            return macd_values.hist[-1 - periods_ago]
+        return 0
     
     def cross_above(self, a: Union[float, np.ndarray], b: Union[float, np.ndarray]) -> bool:
         """Check if a crosses above b"""
