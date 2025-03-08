@@ -24,16 +24,6 @@ The strategy is designed for cryptocurrency markets but can be adapted to other 
 3. Save the `adaptive_momentum_nexus.py` file to the `strategies` folder of your Jesse project
 4. Configure the strategy in your routes
 
-## Configuration
-
-Add the strategy to your `routes.py` file:
-
-```python
-routes = [
-    ('Binance', 'BTC-USDT', '4h', 'AdaptiveMomentumNexus'),
-]
-```
-
 ## Optimization
 
 The strategy includes several parameters that can be optimized:
@@ -90,14 +80,6 @@ You can optimize these parameters using Jesse's built-in optimization framework.
 - ATR-based stop loss placement
 - Trading timeout periods between signals
 - Warm-up period to ensure indicator stability
-
-## Backtesting
-
-To backtest the strategy:
-
-```bash
-jesse backtest 2021-01-01 2021-02-01
-```
 
 ## Live Trading
 
