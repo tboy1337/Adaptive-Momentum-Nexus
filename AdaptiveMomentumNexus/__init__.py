@@ -57,7 +57,7 @@ class AdaptiveMomentumNexus(Strategy):
         macd, macd_signal, macd_hist = self.macd()
         
         # Volume filter - only trade if volume is above average
-        current_volume = self.volume
+        current_volume = self.candles[:, 5][-1]  # Current volume from candles
         volume_ma = self.sma(self.volume_ma_period, 'volume')
         volume_filter = current_volume > volume_ma * 1.2
         
@@ -101,7 +101,7 @@ class AdaptiveMomentumNexus(Strategy):
         macd, macd_signal, macd_hist = self.macd()
         
         # Volume filter - only trade if volume is above average
-        current_volume = self.volume
+        current_volume = self.candles[:, 5][-1]  # Current volume from candles
         volume_ma = self.sma(self.volume_ma_period, 'volume')
         volume_filter = current_volume > volume_ma * 1.2
         
