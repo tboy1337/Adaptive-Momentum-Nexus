@@ -5,7 +5,7 @@ import talib
 from typing import Union
 
 
-class OptimizedMomentumStrategy(Strategy):
+class AdaptiveMomentumNexus(Strategy):
     """
     An optimized momentum strategy for Jesse trading framework combining:
     - Adaptive EMA crossovers
