@@ -21,7 +21,7 @@ The strategy is designed for cryptocurrency markets but can be adapted to other 
 
 1. Make sure you have [Jesse](https://jesse.trade/) installed
 2. Create a new Jesse project or use an existing one
-3. Save the `adaptive_momentum_nexus.py` file to the `strategies` folder of your Jesse project
+3. Save the `AdaptiveMomentumNexus` folder to the `strategies` folder of your Jesse project
 4. Configure the strategy in your routes
 
 ## Optimization
