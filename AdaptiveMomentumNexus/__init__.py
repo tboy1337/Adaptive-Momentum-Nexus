@@ -38,7 +38,6 @@ class AdaptiveMomentumNexus(Strategy):
         self.trend_direction = 0  # -1 for downtrend, 0 for neutral, 1 for uptrend
         self.last_signal_candle = 0
     
-    @property
     def hyperparameters(self):
         """
         Define the hyperparameters that can be optimized by Jesse's optimization feature.
