@@ -468,8 +468,8 @@ class AdaptiveMomentumNexus(Strategy):
     def bollinger_bands(self, period: int = 20, devs: float = 2.0, source_type: str = "close", sequential: bool = True) -> object:
         """Calculate Bollinger Bands using Jesse's indicator"""
         from jesse.indicators import bollinger_bands
-        # Ensure devs is explicitly a float
-        return bollinger_bands(self.candles, period, float(devs), source_type, sequential)
+        # Pass the parameters in the correct order matching the documentation
+        return bollinger_bands(self.candles, period, devs, devs, 0, 0, source_type, sequential)
     
     def macd(self, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9, 
             source_type: str = "close", sequential: bool = False) -> Union[float, np.ndarray]:
