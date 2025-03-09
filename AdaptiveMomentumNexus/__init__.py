@@ -307,17 +307,22 @@ class AdaptiveMomentumNexus(Strategy):
             # Calculate current profit
             profit_pct = (self.price - self.average_entry_price) / self.average_entry_price * 100
             
+            # Check if stop_loss is properly set as a tuple
+            if not isinstance(self.stop_loss, tuple) or len(self.stop_loss) < 2:
+                # If stop_loss is not properly set, skip updating it
+                return
+                
             # Implement tiered trailing stop based on profit level
             if profit_pct > 4:
                 # Significant profit - tighten stop loss (1.5 ATR)
                 new_stop_price = self.price - (atr * 1.5)
-                # Make sure we're using the tuple format (qty, price)
+                # Make sure we're using the tuple format (qty, price) and only update if it's higher
                 if new_stop_price > self.stop_loss[1]:
                     self.stop_loss = self.position.qty, new_stop_price
             elif profit_pct > 2:
                 # Moderate profit - slightly tighter stop (2 ATR)
                 new_stop_price = self.price - (atr * 2)
-                # Make sure we're using the tuple format (qty, price)
+                # Make sure we're using the tuple format (qty, price) and only update if it's higher
                 if new_stop_price > self.stop_loss[1]:
                     self.stop_loss = self.position.qty, new_stop_price
 
