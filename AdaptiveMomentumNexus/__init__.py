@@ -372,15 +372,17 @@ class AdaptiveMomentumNexus(Strategy):
             if profit_pct > 4:
                 # Significant profit - tighten stop loss (1.5 ATR)
                 new_stop_price = self.price - (atr * 1.5)
-                # Make sure we're using the tuple format (qty, price)
-                if new_stop_price > self.stop_loss[1]:
-                    self.stop_loss = self.position.qty, new_stop_price
+                # Check if stop_loss exists and is a tuple
+                if hasattr(self, 'stop_loss') and isinstance(self.stop_loss, tuple) and len(self.stop_loss) >= 2:
+                    if new_stop_price > self.stop_loss[1]:
+                        self.stop_loss = self.position.qty, new_stop_price
             elif profit_pct > 2:
                 # Moderate profit - slightly tighter stop (2 ATR)
                 new_stop_price = self.price - (atr * 2)
-                # Make sure we're using the tuple format (qty, price)
-                if new_stop_price > self.stop_loss[1]:
-                    self.stop_loss = self.position.qty, new_stop_price
+                # Check if stop_loss exists and is a tuple
+                if hasattr(self, 'stop_loss') and isinstance(self.stop_loss, tuple) and len(self.stop_loss) >= 2:
+                    if new_stop_price > self.stop_loss[1]:
+                        self.stop_loss = self.position.qty, new_stop_price
         
         # For short positions
         elif self.is_short:
@@ -391,15 +393,17 @@ class AdaptiveMomentumNexus(Strategy):
             if profit_pct > 4:
                 # Significant profit - tighten stop loss (1.5 ATR)
                 new_stop_price = self.price + (atr * 1.5)
-                # Make sure we're using the tuple format (qty, price)
-                if new_stop_price < self.stop_loss[1]:
-                    self.stop_loss = self.position.qty, new_stop_price
+                # Check if stop_loss exists and is a tuple
+                if hasattr(self, 'stop_loss') and isinstance(self.stop_loss, tuple) and len(self.stop_loss) >= 2:
+                    if new_stop_price < self.stop_loss[1]:
+                        self.stop_loss = self.position.qty, new_stop_price
             elif profit_pct > 2:
                 # Moderate profit - slightly tighter stop (2 ATR)
                 new_stop_price = self.price + (atr * 2)
-                # Make sure we're using the tuple format (qty, price)
-                if new_stop_price < self.stop_loss[1]:
-                    self.stop_loss = self.position.qty, new_stop_price
+                # Check if stop_loss exists and is a tuple
+                if hasattr(self, 'stop_loss') and isinstance(self.stop_loss, tuple) and len(self.stop_loss) >= 2:
+                    if new_stop_price < self.stop_loss[1]:
+                        self.stop_loss = self.position.qty, new_stop_price
 
     def should_cancel_entry(self) -> bool:
         """
