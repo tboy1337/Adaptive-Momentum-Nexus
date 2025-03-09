@@ -69,7 +69,7 @@ class AdaptiveMomentumNexus(Strategy):
         close_prices = self.candles[:, 2]  # Close prices
         
         # Calculate Bollinger Bands width to determine volatility
-        bb = self.bollinger_bands(20, 2, sequential=True)
+        bb = self.bollinger_bands(20, 2.0, "close", sequential=True)  # Ensure devs is a float
         bb_upper, bb_middle, bb_lower = bb.upperband, bb.middleband, bb.lowerband
         bb_width = (bb_upper - bb_lower) / bb_middle
         
@@ -427,7 +427,7 @@ class AdaptiveMomentumNexus(Strategy):
             return True
         
         # Exit if trend has clearly reversed
-        if self.cross_below(self.ema(self.short_period), self.ema(self.long_period)):
+        if self.cross_below(self.ema(self.short_period, sequential=True), self.ema(self.long_period, sequential=True)):
             return True
             
         return False
@@ -444,7 +444,7 @@ class AdaptiveMomentumNexus(Strategy):
             return True
         
         # Exit if trend has clearly reversed
-        if self.cross_above(self.ema(self.short_period), self.ema(self.long_period)):
+        if self.cross_above(self.ema(self.short_period, sequential=True), self.ema(self.long_period, sequential=True)):
             return True
             
         return False
@@ -464,7 +464,7 @@ class AdaptiveMomentumNexus(Strategy):
         from jesse.indicators import atr
         return atr(self.candles, period, sequential)
         
-    def bollinger_bands(self, period: int = 20, devs: float = 2, source_type: str = "close", sequential: bool = True) -> object:
+    def bollinger_bands(self, period: int = 20, devs: float = 2.0, source_type: str = "close", sequential: bool = True) -> object:
         """Calculate Bollinger Bands using Jesse's indicator"""
         from jesse.indicators import bollinger_bands
         return bollinger_bands(self.candles, period, devs, source_type, sequential)
