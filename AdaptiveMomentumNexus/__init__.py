@@ -32,6 +32,9 @@ class AdaptiveMomentumNexus(Strategy):
         self.last_trade_candle = 0
         self.min_candles_between_trades = 5  # Prevent overtrading
         self.order_book_data = {}  # Would be populated from exchange data
+        
+        # Store temporary values for use in on_open_position
+        self.temp_take_profit = None
     
     def hyperparameters(self):
         return [
@@ -273,7 +276,9 @@ class AdaptiveMomentumNexus(Strategy):
         # Entry price
         entry = self.price
         stop_loss = entry - sl_distance
-        take_profit = entry + tp_distance
+        
+        # Store take profit for later use in on_open_position
+        self.temp_take_profit = entry + tp_distance
         
         # Position sizing with Kelly-inspired adjustment based on signal quality
         signal_quality = self.calculate_long_signal_quality(
@@ -296,7 +301,7 @@ class AdaptiveMomentumNexus(Strategy):
         # Place the order
         self.buy = position_size, entry
         self.stop_loss = stop_loss
-        self.take_profit = take_profit
+        # Take profit is set in on_open_position
 
     def go_short(self):
         """
@@ -310,7 +315,9 @@ class AdaptiveMomentumNexus(Strategy):
         # Entry price
         entry = self.price
         stop_loss = entry + sl_distance
-        take_profit = entry - tp_distance
+        
+        # Store take profit for later use in on_open_position
+        self.temp_take_profit = entry - tp_distance
         
         # Position sizing with Kelly-inspired adjustment based on signal quality
         signal_quality = self.calculate_short_signal_quality(
@@ -333,7 +340,17 @@ class AdaptiveMomentumNexus(Strategy):
         # Place the order
         self.sell = position_size, entry
         self.stop_loss = stop_loss
-        self.take_profit = take_profit
+        # Take profit is set in on_open_position
+
+    def on_open_position(self, order):
+        """
+        Called right after a position is opened
+        Used to set take profit levels for spot trading
+        """
+        # Set the take profit level that was calculated in go_long/go_short
+        if self.temp_take_profit is not None:
+            self.take_profit = self.temp_take_profit
+            self.temp_take_profit = None
 
     def update_position(self):
         """
