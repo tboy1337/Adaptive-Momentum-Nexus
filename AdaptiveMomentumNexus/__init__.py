@@ -12,6 +12,8 @@ class AdaptiveMomentumNexus(Strategy):
     - Order book imbalance analysis
     - Dynamic position sizing with risk management
     - Multi-timeframe analysis
+    
+    Modified for spot exchanges (long-only)
     """
 
     def __init__(self):
@@ -131,37 +133,7 @@ class AdaptiveMomentumNexus(Strategy):
             
         return False
 
-    def should_short(self) -> bool:
-        """
-        Determine if we should enter a short position
-        """
-        # Basic checks
-        if self.index < 50:  # Ensure enough data for calculations
-            return False
-            
-        if self.index - self.last_trade_candle < self.min_candles_between_trades:
-            return False
-            
-        # Don't enter short positions in bullish regimes
-        if self.current_regime == 1:
-            return False
-            
-        # Core momentum indicators
-        short_ema = self.ema(self.short_period)
-        long_ema = self.ema(self.long_period)
-        
-        # Order book imbalance (simplified simulation for Jesse)
-        order_imbalance = self.simulate_order_imbalance()
-        
-        # Calculate signal quality score (0-100) combining multiple factors
-        signal_score = self.calculate_short_signal_quality(short_ema, long_ema, order_imbalance)
-        
-        # Only take high quality signals
-        if signal_score >= self.signal_quality_threshold:
-            self.last_trade_candle = self.index
-            return True
-            
-        return False
+    # Removed should_short method as it's not compatible with spot exchanges
 
     def calculate_long_signal_quality(self, short_ema, long_ema, order_imbalance) -> float:
         """
@@ -197,10 +169,13 @@ class AdaptiveMomentumNexus(Strategy):
         
         return score
 
+    # Keeping calculate_short_signal_quality for future reference if needed
+
     def calculate_short_signal_quality(self, short_ema, long_ema, order_imbalance) -> float:
         """
         Calculate the quality of a short signal (0-100)
         Higher scores indicate stronger signals
+        Not used in spot trading but kept for reference
         """
         score = 0
         
@@ -305,43 +280,7 @@ class AdaptiveMomentumNexus(Strategy):
         self.buy = position_size, entry
         # Stop loss and take profit are set in on_open_position
 
-    def go_short(self):
-        """
-        Execute short position with dynamic sizing
-        """
-        # Calculate dynamic stop loss and take profit based on ATR
-        atr = self.atr(self.atr_period)
-        sl_distance = atr * self.atr_multiplier_sl
-        tp_distance = atr * self.atr_multiplier_tp
-        
-        # Entry price
-        entry = self.price
-        
-        # Store stop loss and take profit for later use in on_open_position
-        self.temp_stop_loss = entry + sl_distance
-        self.temp_take_profit = entry - tp_distance
-        
-        # Position sizing with Kelly-inspired adjustment based on signal quality
-        signal_quality = self.calculate_short_signal_quality(
-            self.ema(self.short_period), 
-            self.ema(self.long_period),
-            self.simulate_order_imbalance()
-        )
-        
-        # Adjust risk based on signal quality
-        adjusted_risk = self.risk_per_trade * (signal_quality / 100)
-        
-        # Calculate position size - use self.balance instead of self.capital
-        risk_amount = self.balance * (adjusted_risk / 100)
-        position_size = risk_amount / sl_distance
-        
-        # Safety cap
-        max_allowed_position = self.available_margin / entry * 0.95
-        position_size = min(position_size, max_allowed_position)
-        
-        # Place the order
-        self.sell = position_size, entry
-        # Stop loss and take profit are set in on_open_position
+    # Removed go_short method as it's not compatible with spot exchanges
 
     def on_open_position(self, order):
         """
@@ -363,7 +302,7 @@ class AdaptiveMomentumNexus(Strategy):
         """
         atr = self.atr(self.atr_period)
         
-        # For long positions
+        # For long positions only (since we're on spot)
         if self.is_long:
             # Calculate current profit
             profit_pct = (self.price - self.average_entry_price) / self.average_entry_price * 100
@@ -372,38 +311,15 @@ class AdaptiveMomentumNexus(Strategy):
             if profit_pct > 4:
                 # Significant profit - tighten stop loss (1.5 ATR)
                 new_stop_price = self.price - (atr * 1.5)
-                # Check if stop_loss exists and is a tuple
-                if hasattr(self, 'stop_loss') and isinstance(self.stop_loss, tuple) and len(self.stop_loss) >= 2:
-                    if new_stop_price > self.stop_loss[1]:
-                        self.stop_loss = self.position.qty, new_stop_price
+                # Make sure we're using the tuple format (qty, price)
+                if new_stop_price > self.stop_loss[1]:
+                    self.stop_loss = self.position.qty, new_stop_price
             elif profit_pct > 2:
                 # Moderate profit - slightly tighter stop (2 ATR)
                 new_stop_price = self.price - (atr * 2)
-                # Check if stop_loss exists and is a tuple
-                if hasattr(self, 'stop_loss') and isinstance(self.stop_loss, tuple) and len(self.stop_loss) >= 2:
-                    if new_stop_price > self.stop_loss[1]:
-                        self.stop_loss = self.position.qty, new_stop_price
-        
-        # For short positions
-        elif self.is_short:
-            # Calculate current profit
-            profit_pct = (self.average_entry_price - self.price) / self.average_entry_price * 100
-            
-            # Implement tiered trailing stop based on profit level
-            if profit_pct > 4:
-                # Significant profit - tighten stop loss (1.5 ATR)
-                new_stop_price = self.price + (atr * 1.5)
-                # Check if stop_loss exists and is a tuple
-                if hasattr(self, 'stop_loss') and isinstance(self.stop_loss, tuple) and len(self.stop_loss) >= 2:
-                    if new_stop_price < self.stop_loss[1]:
-                        self.stop_loss = self.position.qty, new_stop_price
-            elif profit_pct > 2:
-                # Moderate profit - slightly tighter stop (2 ATR)
-                new_stop_price = self.price + (atr * 2)
-                # Check if stop_loss exists and is a tuple
-                if hasattr(self, 'stop_loss') and isinstance(self.stop_loss, tuple) and len(self.stop_loss) >= 2:
-                    if new_stop_price < self.stop_loss[1]:
-                        self.stop_loss = self.position.qty, new_stop_price
+                # Make sure we're using the tuple format (qty, price)
+                if new_stop_price > self.stop_loss[1]:
+                    self.stop_loss = self.position.qty, new_stop_price
 
     def should_cancel_entry(self) -> bool:
         """
@@ -414,8 +330,6 @@ class AdaptiveMomentumNexus(Strategy):
         
         # Cancel if there's a sudden large price movement against our position
         if self.is_long and price_change < -1.5:
-            return True
-        if self.is_short and price_change > 1.5:
             return True
             
         return False
@@ -436,23 +350,8 @@ class AdaptiveMomentumNexus(Strategy):
             return True
             
         return False
-        
-    def should_exit_short(self) -> bool:
-        """
-        Additional logic for exiting short positions beyond SL/TP
-        """
-        # Early exit on momentum reversal
-        rsi = self.rsi(14)
-        
-        # Exit if RSI becomes oversold and starts rising
-        if rsi < 25 and self.cross_above(self.rsi(14, sequential=True), 25):
-            return True
-        
-        # Exit if trend has clearly reversed
-        if self.cross_above(self.ema(self.short_period, sequential=True), self.ema(self.long_period, sequential=True)):
-            return True
-            
-        return False
+    
+    # Removed should_exit_short as it's not needed for spot exchanges
 
     def ema(self, period: int, source_type: str = "close", sequential: bool = False) -> Union[float, np.ndarray]:
         """Calculate EMA using Jesse's indicator"""
