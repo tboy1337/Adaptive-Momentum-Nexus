@@ -69,7 +69,8 @@ class AdaptiveMomentumNexus(Strategy):
         close_prices = self.candles[:, 2]  # Close prices
         
         # Calculate Bollinger Bands width to determine volatility
-        bb = self.bollinger_bands(20, 2.0, "close", sequential=True)  # Ensure devs is a float
+        # Fixed: Explicitly pass 2.0 as float instead of possibly a string
+        bb = self.bollinger_bands(20, 2.0, "close", sequential=True)
         bb_upper, bb_middle, bb_lower = bb.upperband, bb.middleband, bb.lowerband
         bb_width = (bb_upper - bb_lower) / bb_middle
         
@@ -467,7 +468,8 @@ class AdaptiveMomentumNexus(Strategy):
     def bollinger_bands(self, period: int = 20, devs: float = 2.0, source_type: str = "close", sequential: bool = True) -> object:
         """Calculate Bollinger Bands using Jesse's indicator"""
         from jesse.indicators import bollinger_bands
-        return bollinger_bands(self.candles, period, devs, source_type, sequential)
+        # Ensure devs is explicitly a float
+        return bollinger_bands(self.candles, period, float(devs), source_type, sequential)
     
     def macd(self, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9, 
             source_type: str = "close", sequential: bool = False) -> Union[float, np.ndarray]:
