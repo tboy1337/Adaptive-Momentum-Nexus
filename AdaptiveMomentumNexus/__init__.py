@@ -69,7 +69,8 @@ class AdaptiveMomentumNexus(Strategy):
         close_prices = self.candles[:, 2]  # Close prices
         
         # Calculate Bollinger Bands width to determine volatility
-        bb_upper, bb_middle, bb_lower = self.bollinger_bands(20, 2)
+        bb = self.bollinger_bands(20, 2, sequential=True)
+        bb_upper, bb_middle, bb_lower = bb.upperband, bb.middleband, bb.lowerband
         bb_width = (bb_upper - bb_lower) / bb_middle
         
         # Determine trend direction using Fractal Efficiency
@@ -463,15 +464,10 @@ class AdaptiveMomentumNexus(Strategy):
         from jesse.indicators import atr
         return atr(self.candles, period, sequential)
         
-    def bollinger_bands(self, period: int = 20, devs: float = 2, source_type: str = "close", sequential: bool = False) -> Tuple[float, float, float]:
+    def bollinger_bands(self, period: int = 20, devs: float = 2, source_type: str = "close", sequential: bool = True) -> object:
         """Calculate Bollinger Bands using Jesse's indicator"""
         from jesse.indicators import bollinger_bands
-        bb = bollinger_bands(self.candles, period, devs, source_type, sequential)
-        
-        if sequential:
-            return bb.upperband, bb.middleband, bb.lowerband
-        else:
-            return bb.upperband, bb.middleband, bb.lowerband
+        return bollinger_bands(self.candles, period, devs, source_type, sequential)
     
     def macd(self, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9, 
             source_type: str = "close", sequential: bool = False) -> Union[float, np.ndarray]:
