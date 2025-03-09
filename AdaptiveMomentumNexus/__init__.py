@@ -285,8 +285,8 @@ class AdaptiveMomentumNexus(Strategy):
         # Adjust risk based on signal quality
         adjusted_risk = self.risk_per_trade * (signal_quality / 100)
         
-        # Calculate position size
-        risk_amount = self.capital * (adjusted_risk / 100)
+        # Calculate position size - FIXED: use self.balance instead of self.capital
+        risk_amount = self.balance * (adjusted_risk / 100)
         position_size = risk_amount / sl_distance
         
         # Safety cap
@@ -322,8 +322,8 @@ class AdaptiveMomentumNexus(Strategy):
         # Adjust risk based on signal quality
         adjusted_risk = self.risk_per_trade * (signal_quality / 100)
         
-        # Calculate position size
-        risk_amount = self.capital * (adjusted_risk / 100)
+        # Calculate position size - FIXED: use self.balance instead of self.capital
+        risk_amount = self.balance * (adjusted_risk / 100)
         position_size = risk_amount / sl_distance
         
         # Safety cap
