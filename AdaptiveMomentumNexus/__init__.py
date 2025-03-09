@@ -41,23 +41,23 @@ class AdaptiveMomentumNexus(Strategy):
     def hyperparameters(self):
         """
         Define the hyperparameters that can be optimized by Jesse's optimization feature.
-        Each parameter should have a 'name', 'type', and 'min/max' values for numbers,
+        Each parameter should have a 'name', 'type', 'default', and 'min/max' values for numbers,
         or 'options' for categorical parameters.
         """
         return [
-            {'name': 'fast_ema_period', 'type': int, 'min': 3, 'max': 20},
-            {'name': 'slow_ema_period', 'type': int, 'min': 15, 'max': 50},
-            {'name': 'rsi_period', 'type': int, 'min': 7, 'max': 21},
-            {'name': 'rsi_overbought', 'type': int, 'min': 65, 'max': 85},
-            {'name': 'rsi_oversold', 'type': int, 'min': 15, 'max': 35},
-            {'name': 'macd_fast', 'type': int, 'min': 8, 'max': 20},
-            {'name': 'macd_slow', 'type': int, 'min': 20, 'max': 40},
-            {'name': 'macd_signal', 'type': int, 'min': 5, 'max': 15},
-            {'name': 'atr_period', 'type': int, 'min': 7, 'max': 21},
-            {'name': 'atr_multiplier_sl', 'type': float, 'min': 1.0, 'max': 5.0, 'step': 0.5},
-            {'name': 'atr_multiplier_tp', 'type': float, 'min': 2.0, 'max': 8.0, 'step': 0.5},
-            {'name': 'volume_ma_period', 'type': int, 'min': 10, 'max': 30},
-            {'name': 'risk_per_trade', 'type': float, 'min': 0.5, 'max': 3.0, 'step': 0.25},
+            {'name': 'fast_ema_period', 'type': int, 'min': 3, 'max': 20, 'default': 8},
+            {'name': 'slow_ema_period', 'type': int, 'min': 15, 'max': 50, 'default': 21},
+            {'name': 'rsi_period', 'type': int, 'min': 7, 'max': 21, 'default': 14},
+            {'name': 'rsi_overbought', 'type': int, 'min': 65, 'max': 85, 'default': 70},
+            {'name': 'rsi_oversold', 'type': int, 'min': 15, 'max': 35, 'default': 30},
+            {'name': 'macd_fast', 'type': int, 'min': 8, 'max': 20, 'default': 12},
+            {'name': 'macd_slow', 'type': int, 'min': 20, 'max': 40, 'default': 26},
+            {'name': 'macd_signal', 'type': int, 'min': 5, 'max': 15, 'default': 9},
+            {'name': 'atr_period', 'type': int, 'min': 7, 'max': 21, 'default': 14},
+            {'name': 'atr_multiplier_sl', 'type': float, 'min': 1.0, 'max': 5.0, 'step': 0.5, 'default': 3.0},
+            {'name': 'atr_multiplier_tp', 'type': float, 'min': 2.0, 'max': 8.0, 'step': 0.5, 'default': 5.0},
+            {'name': 'volume_ma_period', 'type': int, 'min': 10, 'max': 30, 'default': 20},
+            {'name': 'risk_per_trade', 'type': float, 'min': 0.5, 'max': 3.0, 'step': 0.25, 'default': 2.0},
         ]
 
     def should_long(self) -> bool:
