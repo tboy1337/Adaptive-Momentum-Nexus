@@ -35,6 +35,7 @@ class AdaptiveMomentumNexus(Strategy):
         
         # Store temporary values for use in on_open_position
         self.temp_take_profit = None
+        self.temp_stop_loss = None
     
     def hyperparameters(self):
         return [
@@ -275,9 +276,9 @@ class AdaptiveMomentumNexus(Strategy):
         
         # Entry price
         entry = self.price
-        stop_loss = entry - sl_distance
         
-        # Store take profit for later use in on_open_position
+        # Store stop loss and take profit for later use in on_open_position
+        self.temp_stop_loss = entry - sl_distance
         self.temp_take_profit = entry + tp_distance
         
         # Position sizing with Kelly-inspired adjustment based on signal quality
@@ -290,7 +291,7 @@ class AdaptiveMomentumNexus(Strategy):
         # Adjust risk based on signal quality
         adjusted_risk = self.risk_per_trade * (signal_quality / 100)
         
-        # Calculate position size - FIXED: use self.balance instead of self.capital
+        # Calculate position size - use self.balance instead of self.capital
         risk_amount = self.balance * (adjusted_risk / 100)
         position_size = risk_amount / sl_distance
         
@@ -300,8 +301,7 @@ class AdaptiveMomentumNexus(Strategy):
         
         # Place the order
         self.buy = position_size, entry
-        self.stop_loss = stop_loss
-        # Take profit is set in on_open_position
+        # Stop loss and take profit are set in on_open_position
 
     def go_short(self):
         """
@@ -314,9 +314,9 @@ class AdaptiveMomentumNexus(Strategy):
         
         # Entry price
         entry = self.price
-        stop_loss = entry + sl_distance
         
-        # Store take profit for later use in on_open_position
+        # Store stop loss and take profit for later use in on_open_position
+        self.temp_stop_loss = entry + sl_distance
         self.temp_take_profit = entry - tp_distance
         
         # Position sizing with Kelly-inspired adjustment based on signal quality
@@ -329,7 +329,7 @@ class AdaptiveMomentumNexus(Strategy):
         # Adjust risk based on signal quality
         adjusted_risk = self.risk_per_trade * (signal_quality / 100)
         
-        # Calculate position size - FIXED: use self.balance instead of self.capital
+        # Calculate position size - use self.balance instead of self.capital
         risk_amount = self.balance * (adjusted_risk / 100)
         position_size = risk_amount / sl_distance
         
@@ -339,18 +339,21 @@ class AdaptiveMomentumNexus(Strategy):
         
         # Place the order
         self.sell = position_size, entry
-        self.stop_loss = stop_loss
-        # Take profit is set in on_open_position
+        # Stop loss and take profit are set in on_open_position
 
     def on_open_position(self, order):
         """
         Called right after a position is opened
-        Used to set take profit levels for spot trading
+        Used to set take profit and stop loss levels for spot trading
         """
-        # Set the take profit level that was calculated in go_long/go_short
+        # Set the take profit and stop loss levels that were calculated in go_long/go_short
         if self.temp_take_profit is not None:
             self.take_profit = self.temp_take_profit
             self.temp_take_profit = None
+            
+        if self.temp_stop_loss is not None:
+            self.stop_loss = self.temp_stop_loss
+            self.temp_stop_loss = None
 
     def update_position(self):
         """
