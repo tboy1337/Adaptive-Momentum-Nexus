@@ -348,11 +348,11 @@ class AdaptiveMomentumNexus(Strategy):
         """
         # Set the take profit and stop loss levels that were calculated in go_long/go_short
         if self.temp_take_profit is not None:
-            self.take_profit = self.temp_take_profit
+            self.take_profit = self.position.qty, self.temp_take_profit
             self.temp_take_profit = None
             
         if self.temp_stop_loss is not None:
-            self.stop_loss = self.temp_stop_loss
+            self.stop_loss = self.position.qty, self.temp_stop_loss
             self.temp_stop_loss = None
 
     def update_position(self):
@@ -369,14 +369,16 @@ class AdaptiveMomentumNexus(Strategy):
             # Implement tiered trailing stop based on profit level
             if profit_pct > 4:
                 # Significant profit - tighten stop loss (1.5 ATR)
-                new_stop = self.price - (atr * 1.5)
-                if new_stop > self.stop_loss:
-                    self.stop_loss = new_stop
+                new_stop_price = self.price - (atr * 1.5)
+                # Make sure we're using the tuple format (qty, price)
+                if new_stop_price > self.stop_loss[1]:
+                    self.stop_loss = self.position.qty, new_stop_price
             elif profit_pct > 2:
                 # Moderate profit - slightly tighter stop (2 ATR)
-                new_stop = self.price - (atr * 2)
-                if new_stop > self.stop_loss:
-                    self.stop_loss = new_stop
+                new_stop_price = self.price - (atr * 2)
+                # Make sure we're using the tuple format (qty, price)
+                if new_stop_price > self.stop_loss[1]:
+                    self.stop_loss = self.position.qty, new_stop_price
         
         # For short positions
         elif self.is_short:
@@ -386,14 +388,16 @@ class AdaptiveMomentumNexus(Strategy):
             # Implement tiered trailing stop based on profit level
             if profit_pct > 4:
                 # Significant profit - tighten stop loss (1.5 ATR)
-                new_stop = self.price + (atr * 1.5)
-                if new_stop < self.stop_loss:
-                    self.stop_loss = new_stop
+                new_stop_price = self.price + (atr * 1.5)
+                # Make sure we're using the tuple format (qty, price)
+                if new_stop_price < self.stop_loss[1]:
+                    self.stop_loss = self.position.qty, new_stop_price
             elif profit_pct > 2:
                 # Moderate profit - slightly tighter stop (2 ATR)
-                new_stop = self.price + (atr * 2)
-                if new_stop < self.stop_loss:
-                    self.stop_loss = new_stop
+                new_stop_price = self.price + (atr * 2)
+                # Make sure we're using the tuple format (qty, price)
+                if new_stop_price < self.stop_loss[1]:
+                    self.stop_loss = self.position.qty, new_stop_price
 
     def should_cancel_entry(self) -> bool:
         """
